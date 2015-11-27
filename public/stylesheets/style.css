@@ -1,0 +1,11 @@
+body
+{
+	background-image: url(../images/background03.jpg);
+	background-repeat:no-repeat;
+	background-attachment:fixed;
+	background-position:center;
+}
+
+a {
+  color: #00B7FF;
+}

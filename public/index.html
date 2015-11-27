@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+	
+<head>
+	<base href="/">
+	<title>whatmap</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+
+<body ng-app="app" ng-controller="WhatmapController as wm">
+	
+	<!-- Title and Search -->
+	<div class="container" style="background-color:white">
+		<h5><a ng-href='/'><strong>What map is this?</strong></a></h5>
+		
+		<form role="form" class="form has-feedback" ng-submit="wm.submit()">
+			<div class="form-group">
+				<input type="text" placeholder="surf_" ng-model="wm.query" required class="form-control">
+				<span aria-hidden="true" class="glyphicon glyphicon-search form-control-feedback"></span>
+			</div>
+		</form>
+	</div>
+	
+	<!-- Angular View -->
+	<div class="container" style="background-color:white">
+		<div ng-view></div>
+	</div>
+	
+	<!-- Callouts -->
+	<div class="container" style="background-color:white">
+		<div class="panel panel-default" style="text-align: center">
+			<div class="panel-body">
+				Try searching "surf" for a list of all maps.
+			</div>
+			<div class="panel-body">
+				Adapted to NodeJS, AngularJS with Youtube API v3; might return random videos at times.
+			</div>
+		</div>
+	</div>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-beta.2/angular-route.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-beta.2/angular-sanitize.min.js"></script>
+	<script src="/javascripts/app.js"></script>
+</body>
+
+</html>

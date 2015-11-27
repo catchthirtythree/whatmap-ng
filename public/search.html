@@ -1,0 +1,23 @@
+<div class="alert alert-danger" role="alert" ng-show="error" style="text-align:center">
+	<strong>{{ error.message }}</strong>
+</div>
+	
+<div class="panel panel-default">	
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th style="width:50%">Name</th>
+				<th style="width:25%">Tier</th>
+				<th style="width:25%">Type</th>
+			</tr>
+		</thead>
+		<tbody ng-repeat="map in results">
+			<tr>
+				<td> <a ng-href="../maps/{{ map.id }}">{{ map.name }}</a></td>
+				<td>{{ map.tier }}</td>
+				<td>{{ map.type }}</td>
+			</tr>
+		</tbody>
+	</table>
+	
+</div>
