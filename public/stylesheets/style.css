@@ -1,5 +1,6 @@
 body
 {
+	padding: 20px;
 	background-image: url(../images/background03.jpg);
 	background-repeat:no-repeat;
 	background-attachment:fixed;

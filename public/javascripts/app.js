@@ -38,7 +38,6 @@
 	
 	app.controller("MapController", function($http, $routeParams, $sce, $scope) {
 		$scope.map = {};
-		
 
 		this.init = function() {
 			// Query map api.
@@ -58,7 +57,7 @@
 								
 								var video;
 								if (response.items.length > 0) {
-									video = "<iframe width=\"560\" height=\"315\" src=\"http://www.youtube.com/embed/" + response.items[0].id.videoId + "\" frameborder=\"0\" allowfullscreen></iframe>";
+									video = "<iframe width=\"560\" height=\"315\" src=\"http://www.youtube.com/embed/" + findBestVideo(map.name, response).id.videoId + "\" frameborder=\"0\" allowfullscreen></iframe>";
 								} else {
 									video = "<h4 style=\"text-align:center\">No video was found, try going <a href=\"http://www.youtube.com/results?search_query=" + map.name.replace(/_/g, " ") + " wr\" target=\"youtubes\">here</a>.</h4>";
 								}
@@ -124,5 +123,39 @@
 		
 			return this.replace(sprintfRegex, sprintf);
 		};
+	}
+	
+	function findBestVideo(mapName, response) {
+		var channel = "ksfrecords";
+		var keywords = [mapName, mapName.replace(/_/g, " "), 'wr'];
+		var video = response.items[0];
+		var found = false;
+
+		// Check if responses are from ksfrecords.
+		response.items.forEach(function(item) {
+			if (item.snippet.channelTitle.search(new RegExp(channel, "i")) > -1) {
+				video = item;
+				found = true;
+			}
+			if (found) return;
+		});
+		
+		// Check if response titles/descriptions contain keywords.
+		keywords.forEach(function(keyword) {
+			if (found) return;
+			
+			response.items.forEach(function(item) {
+				if (found) return;
+				
+				var snippet = item.snippet;
+				if (snippet.title.search(new RegExp(keyword, "i")) > -1
+					|| snippet.description.search(new RegExp(keyword, "i")) > -1) {
+						video = item;
+						found = true;
+				}
+			});
+		});
+		
+		return video;
 	}
 })();
