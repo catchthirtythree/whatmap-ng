@@ -27,6 +27,32 @@
 					redirectTo: '/'
 				});
 		});
+		
+	app.service('WMApi', function($http, $q) {
+		return {
+			get: function(id) {
+				return $http.get('../api/maps/' + id).
+					then(function(res) {
+						return res.data
+					}).
+					
+					catch(function(res) {
+						return $q.reject(res.data);
+					});
+			},
+			
+			search: function(query) {
+				return $http.get('../api/search/' + query).
+					then(function(res) {
+						return res.data
+					}).
+					
+					catch(function(res) {
+						return $q.reject(res.data);
+					});
+			}
+		};
+	});
 	
 	app.controller('WhatmapController', function($location) {
 		this.query = '';
@@ -36,14 +62,13 @@
 		}
 	});
 	
-	app.controller("MapController", function($http, $routeParams, $sce, $scope) {
+	app.controller("MapController", function(WMApi, $http, $routeParams, $sce, $scope) {
 		$scope.map = {};
 
 		this.init = function() {
 			// Query map api.
-			$http.get('../api/maps/' + $routeParams.id).
-		
-				success(function(data) {
+			WMApi.get($routeParams.id).
+				then(function(data) {
 					if (data.success) {
 						var map = data.map;
 		
@@ -74,7 +99,7 @@
 					}
 				}).
 				
-				error(function(err) {
+				catch(function(err) {
 					$scope.error = err;
 				});
 		}
@@ -82,14 +107,14 @@
 		this.init();
 	});
 	
-	app.controller("SearchController", function($http, $location, $routeParams, $scope) {
+	app.controller("SearchController", function(WMApi, $http, $location, $routeParams, $scope) {
 		$scope.results = [];
 		
 		this.init = function() {
 			// Query search api.
-			$http.get('../api/search/' + $routeParams.query).
+			WMApi.search($routeParams.query).
 		
-				success(function(data) {
+				then(function(data) {
 					if (data.success) {
 						if (data.map) {
 							$location.path('/maps/' + data.map.id);
@@ -104,7 +129,7 @@
 					}
 				}).
 				
-				error(function(err) {
+				catch(function(err) {
 					$scope.error = err;
 				});
 		}
@@ -127,35 +152,36 @@
 	
 	function findBestVideo(mapName, response) {
 		var channel = "ksfrecords";
-		var keywords = [mapName, mapName.replace(/_/g, " "), 'wr'];
+		var keywords = [mapName, mapName.replace(/_/g, " ")];
 		var video = response.items[0];
-		var found = false;
-
+		
+		var rankings = new Array(response.items.length);
+		for (var i = 0; i < rankings.length; ++i) rankings[i] = 0;
+		
 		// Check if responses are from ksfrecords.
-		response.items.forEach(function(item) {
+		for (var i = 0; i < response.items.length; ++i) {
+			var item = response.items[i];
 			if (item.snippet.channelTitle.search(new RegExp(channel, "i")) > -1) {
 				video = item;
-				found = true;
+				rankings[i]++;
 			}
-			if (found) return;
-		});
+		}
 		
 		// Check if response titles/descriptions contain keywords.
 		keywords.forEach(function(keyword) {
-			if (found) return;
-			
-			response.items.forEach(function(item) {
-				if (found) return;
-				
+			// Check if responses are from ksfrecords.
+			for (var i = 0; i < response.items.length; ++i) {
+				var item = response.items[i];
 				var snippet = item.snippet;
 				if (snippet.title.search(new RegExp(keyword, "i")) > -1
 					|| snippet.description.search(new RegExp(keyword, "i")) > -1) {
-						video = item;
-						found = true;
+						rankings[i] += 2;
 				}
-			});
+			}
 		});
 		
-		return video;
+		console.log("Rankings:", rankings);
+		
+		return response.items[rankings.indexOf(Math.max.apply(Math, rankings))];
 	}
 })();
