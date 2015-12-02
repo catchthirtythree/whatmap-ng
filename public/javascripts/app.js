@@ -71,10 +71,16 @@
 				then(function(data) {
 					if (data.success) {
 						var map = data.map;
+						
+						// Remove bad map endings from the name
+						var searchName = map.name;
+						[ /_v\d+/, /_final/, /_fix/ ].forEach(function(badEnd) {
+							searchName = searchName.replace(badEnd, "");
+						});
 		
 						var channel = "https://www.googleapis.com/youtube/v3/search?&forUsername=ksfrecords&q={0}&key=AIzaSyBAiqL_S3tVfpHNHix6sJ9vlcbIcw3X1VQ%20&part=snippet";
 						// Search youtube for a video of the map.
-						$http.get(channel.format(map.name.replace(/_/g, " ") + ' wr')).
+						$http.get(channel.format(searchName + ' wr')).
 						
 							success(function(response) {
 								// Log youtube response.
@@ -150,7 +156,7 @@
 		};
 	}
 	
-	function findBestVideo(mapName, response) {
+	function findBestVideo(mapName, response) {		
 		var channel = "ksfrecords";
 		var keywords = [mapName, mapName.replace(/_/g, " ")];
 		var video = response.items[0];
