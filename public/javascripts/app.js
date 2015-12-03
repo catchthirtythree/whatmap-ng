@@ -51,14 +51,15 @@
 						return $q.reject(res.data);
 					});
 			}
-		};
+		}
 	});
 	
-	app.controller('WhatmapController', function($location) {
+	app.controller('WhatMapController', function($location) {
 		this.query = '';
 		
 		this.submit = function() {
 			$location.path('/search/' + this.query);
+			this.query = '';
 		}
 	});
 	
@@ -66,48 +67,48 @@
 		$scope.map = {};
 
 		this.init = function() {
-			// Query map api.
-			WMApi.get($routeParams.id).
-				then(function(data) {
-					if (data.success) {
-						var map = data.map;
-						
-						// Remove bad map endings from the name
-						var searchName = map.name;
-						[ /_v\d+/, /_final/, /_fix/ ].forEach(function(badEnd) {
-							searchName = searchName.replace(badEnd, "");
-						});
-		
-						var channel = "https://www.googleapis.com/youtube/v3/search?&forUsername=ksfrecords&q={0}&key=AIzaSyBAiqL_S3tVfpHNHix6sJ9vlcbIcw3X1VQ%20&part=snippet";
-						// Search youtube for a video of the map.
-						$http.get(channel.format(searchName + ' wr')).
-						
-							success(function(response) {
-								// Log youtube response.
-								console.log("Response:", response);
-								
-								var video;
-								if (response.items.length > 0) {
-									video = "<iframe width=\"560\" height=\"315\" src=\"http://www.youtube.com/embed/" + findBestVideo(map.name, response).id.videoId + "\" frameborder=\"0\" allowfullscreen></iframe>";
-								} else {
-									video = "<h4 style=\"text-align:center\">No video was found, try going <a href=\"http://www.youtube.com/results?search_query=" + map.name.replace(/_/g, " ") + " wr\" target=\"youtubes\">here</a>.</h4>";
-								}
-								
-								map.video = $sce.trustAsHtml(video);
-								$scope.map = map;
-							}).
-							
-							error(function(err) {
-								$scope.error = err;
-							});
-					} else {
-						$scope.error = data;
-					}
-				}).
+			WMApi.get($routeParams.id).then(this.success, this.error);
+		}
+			
+		this.success = function(response) {
+			if (response.success) {
+				var map = response.map;
 				
-				catch(function(err) {
-					$scope.error = err;
+				var searchName = map.name;
+				[ /_v\d+/, /_final/, /_fix/ ].forEach(function(badEnd) {
+					searchName = searchName.replace(badEnd, "");
 				});
+
+				var channel = "https://www.googleapis.com/youtube/v3/search?&forUsername=ksfrecords&q={0}&key=AIzaSyBAiqL_S3tVfpHNHix6sJ9vlcbIcw3X1VQ%20&part=snippet";
+				var htmlVideo = "<iframe width=\"560\" height=\"315\" src=\"http://www.youtube.com/embed/{0}\" frameborder=\"0\" allowfullscreen></iframe>";
+				var htmlNoVideo = "<h4 style=\"text-align:center\">No video was found, try going <a href=\"http://www.youtube.com/results?search_query={0}wr\" target=\"youtubes\">here</a>.</h4>";
+				
+				$http.get(channel.format(searchName + ' wr')).
+				
+					success(function(response) {
+						console.log("Response:", response);
+						
+						var html;
+						if (response.items.length > 0) {
+							html = htmlVideo.format(findBestVideo(map.name, response).id.videoId);
+						} else {
+							html = htmlNoVideo.format(map.name.replace(/_/g, " "));
+						}
+						
+						map.video = $sce.trustAsHtml(html);
+						$scope.map = map;
+					}).
+					
+					error(function(err) {
+						$scope.error = err;
+					});
+			} else {
+				$scope.error = response;
+			}
+		}
+		
+		this.error = function(response) {
+			$scope.error = response;
 		}
 		
 		this.init();
@@ -117,27 +118,25 @@
 		$scope.results = [];
 		
 		this.init = function() {
-			// Query search api.
-			WMApi.search($routeParams.query).
+			WMApi.search($routeParams.query).then(this.success, this.error);
+		}
 		
-				then(function(data) {
-					if (data.success) {
-						if (data.map) {
-							$location.path('/maps/' + data.map.id);
-						} else {
-							data.maps.forEach(function(map) {
-								$scope.results.push(map);
-							});
-						}
-					} else {
-						console.log("Error data:", data);
-						$scope.error = data;
-					}
-				}).
-				
-				catch(function(err) {
-					$scope.error = err;
-				});
+		this.success = function(response) {
+			if (response.success) {
+				if (response.map) {
+					$location.path('/maps/' + response.map.id);
+				} else {
+					response.maps.forEach(function(map) {
+						$scope.results.push(map);
+					});
+				}
+			} else {
+				$scope.error = response;
+			}
+		}
+		
+		this.error = function(response) {
+			$scope.error = response;
 		}
 		
 		this.init();
@@ -158,7 +157,7 @@
 	
 	function findBestVideo(mapName, response) {		
 		var channel = "ksfrecords";
-		var keywords = [mapName, mapName.replace(/_/g, " ")];
+		var keywords = [ mapName, mapName.replace(/_/g, " ") ];
 		var video = response.items[0];
 		
 		var rankings = new Array(response.items.length);
@@ -181,7 +180,7 @@
 				var snippet = item.snippet;
 				if (snippet.title.search(new RegExp(keyword, "i")) > -1
 					|| snippet.description.search(new RegExp(keyword, "i")) > -1) {
-						rankings[i] += 2;
+						rankings[i]++;
 				}
 			}
 		});
