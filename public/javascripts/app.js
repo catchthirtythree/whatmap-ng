@@ -28,28 +28,14 @@
 				});
 		});
 		
-	app.service('WMApi', function($http, $q) {
+	app.service('MapModel', function($http) {
 		return {
 			get: function(id) {
-				return $http.get('../api/maps/' + id).
-					then(function(res) {
-						return res.data
-					}).
-					
-					catch(function(res) {
-						return $q.reject(res.data);
-					});
+				return $http.get('../api/maps/' + id);
 			},
 			
 			search: function(query) {
-				return $http.get('../api/search/' + query).
-					then(function(res) {
-						return res.data
-					}).
-					
-					catch(function(res) {
-						return $q.reject(res.data);
-					});
+				return $http.get('../api/search/' + query);
 			}
 		}
 	});
@@ -63,16 +49,18 @@
 		}
 	});
 	
-	app.controller("MapController", function(WMApi, $http, $routeParams, $sce, $scope) {
+	app.controller("MapController", function(MapModel, $http, $routeParams, $sce, $scope) {
 		$scope.map = {};
 
 		this.init = function() {
-			WMApi.get($routeParams.id).then(this.success, this.error);
+			MapModel.get($routeParams.id).then(this.success, this.error);
 		}
 			
 		this.success = function(response) {
-			if (response.success) {
-				var map = response.map;
+			var data = response.data;
+			
+			if (data.success) {
+				var map = data.map;
 				
 				var searchName = map.name;
 				[ /_v\d+/, /_final/, /_fix/ ].forEach(function(badEnd) {
@@ -103,40 +91,42 @@
 						$scope.error = err;
 					});
 			} else {
-				$scope.error = response;
+				$scope.error = data;
 			}
 		}
 		
 		this.error = function(response) {
-			$scope.error = response;
+			$scope.error = response.data;
 		}
 		
 		this.init();
 	});
 	
-	app.controller("SearchController", function(WMApi, $http, $location, $routeParams, $scope) {
+	app.controller("SearchController", function(MapModel, $http, $location, $routeParams, $scope) {
 		$scope.results = [];
 		
 		this.init = function() {
-			WMApi.search($routeParams.query).then(this.success, this.error);
+			MapModel.search($routeParams.query).then(this.success, this.error);
 		}
 		
 		this.success = function(response) {
-			if (response.success) {
-				if (response.map) {
+			var data = response.data;
+			
+			if (data.success) {
+				if (data.map) {
 					$location.path('/maps/' + response.map.id);
 				} else {
-					response.maps.forEach(function(map) {
+					data.maps.forEach(function(map) {
 						$scope.results.push(map);
 					});
 				}
 			} else {
-				$scope.error = response;
+				$scope.error = data;
 			}
 		}
 		
 		this.error = function(response) {
-			$scope.error = response;
+			$scope.error = response.data;
 		}
 		
 		this.init();
