@@ -75,6 +75,9 @@
 				
 					success(function(response) {
 						console.log("Response:", response);
+            console.log()
+            
+            var bestVideo = findBestVideo(map.name, response);
 						
 						var html;
 						if (response.items.length > 0) {
@@ -83,7 +86,7 @@
 							html = htmlNoVideo.format(map.name.replace(/_/g, " "));
 						}
 						
-						map.video = $sce.trustAsHtml(html);
+						map.video = $sce.trustAsHtml(html); 
 						$scope.map = map;
 					}).
 					
@@ -114,7 +117,7 @@
 			
 			if (data.success) {
 				if (data.map) {
-					$location.path('/maps/' + response.map.id);
+					$location.path('/maps/' + data.map.id);
 				} else {
 					data.maps.forEach(function(map) {
 						$scope.results.push(map);
@@ -148,7 +151,6 @@
 	function findBestVideo(mapName, response) {		
 		var channel = "ksfrecords";
 		var keywords = [ mapName, mapName.replace(/_/g, " ") ];
-		var video = response.items[0];
 		
 		var rankings = new Array(response.items.length);
 		for (var i = 0; i < rankings.length; ++i) rankings[i] = 0;
@@ -157,7 +159,6 @@
 		for (var i = 0; i < response.items.length; ++i) {
 			var item = response.items[i];
 			if (item.snippet.channelTitle.search(new RegExp(channel, "i")) > -1) {
-				video = item;
 				rankings[i]++;
 			}
 		}
@@ -176,7 +177,7 @@
 		});
 		
 		console.log("Rankings:", rankings);
-		
+    
 		return response.items[rankings.indexOf(Math.max.apply(Math, rankings))];
 	}
 })();
